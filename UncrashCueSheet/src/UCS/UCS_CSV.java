@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import org.apache.http.HttpResponse;
@@ -75,7 +76,16 @@ public class UCS_CSV {
 	private static String temps_out;
 	private static String temps_diff;
 	
+	private static UCS_model modele;
+	private static ArrayList<String[]> tableau;
+	private static String [] curr_row;
+	
+	private static String  previous_isrc;
+			
 	private static ArrayList<String> prs_ = new ArrayList<>();
+	
+	private static int temps_total;
+	private static int big_total;
 
 	public static void main(String [] args) {
 					
@@ -103,7 +113,7 @@ public class UCS_CSV {
 		}
 		else {
 			System.out.println("problème avec la ligne de commande");
-			convertir(new File("/home/autor/Desktop/EDL/FINAL EDL test.edl"));
+			convertir(new File("/home/autor/Desktop/EDL/tests_xls/ORION_BARCELONE.edl"));
 		}
 	}
 	
@@ -121,6 +131,17 @@ public class UCS_CSV {
 	
 	public static void convertir(File f_edl){
 		
+		modele = new UCS_model();
+	    tableau = new ArrayList<>();
+	    
+	    modele.setChemin(f_edl);
+	    
+	    temps_total = 0;
+	    
+	    big_total = 0;
+		
+		
+		
 		try {
 			
 			f_mod = new File (f_edl.toString().replace(".edl", ".csv"));
@@ -128,13 +149,19 @@ public class UCS_CSV {
 			br = new BufferedReader(fr);
 			fw = new FileWriter(f_mod);
 			bw = new BufferedWriter(fw);
+			
+			previous_isrc = null;
 	
             while ((currentLine = br.readLine()) != null) {
             	
             	if(currentLine.startsWith("TITLE")){
+            		
             		elems =  currentLine.split(":")[1].split("_");
             		
             		name = Arrays.asList(elems).subList(3, elems.length	).stream().collect(Collectors.joining("_"));
+            		modele.setName(name);
+            		modele.setProjectType(elems[2]);
+            		modele.setDate(String.format("%s_%s", elems[0], elems[1]));
             		
             		
             		bw.write(String.format(intro, name, elems[2], elems[0], elems[1]));
@@ -142,6 +169,9 @@ public class UCS_CSV {
             	}
             	
                 if(currentLine.contains("FROM CLIP NAME: ANW") || currentLine.contains("FROM CLIP NAME:  ANW")){
+                	
+            		
+            		curr_row = new String[4];
                 	
                 	entry = currentLine.split("FROM CLIP NAME: ")[1].trim();
                 	
@@ -162,9 +192,21 @@ public class UCS_CSV {
 
 					    surfer(ref_title_push);
 					    surfer2();
+					    
+					    temps_total = ((Integer.parseInt(temps_diff.split(":")[0]) * 60) + (Integer.parseInt(temps_diff.split(":")[1])));	
+					    curr_row = new String[] {isrc, ref_title_push_save, prs_.stream().collect(Collectors.joining("\n")) + "\n" + brand, String.format("%02d:%02d", temps_total / 60, temps_total % 60)};
+						modele.getTableau().add(curr_row);
+						
 					}else {
 						System.out.println("titre  : " + ref_title_push + " (répétition)");
+						
+						temps_total += ((Integer.parseInt(temps_diff.split(":")[0]) * 60) + (Integer.parseInt(temps_diff.split(":")[1])));
+						
+						curr_row = new String[] {isrc, ref_title_push_save, prs_.stream().collect(Collectors.joining("\n")) + "\n" + brand, String.format("%02d:%02d", temps_total / 60, temps_total % 60)};
+						modele.getTableau().set(modele.getTableau().size() -1, curr_row);
 					}
+
+					big_total += ((Integer.parseInt(temps_diff.split(":")[0]) * 60) + (Integer.parseInt(temps_diff.split(":")[1])));
 					
 					bw.write(String.format("\"%s\",\"%s\",\"%s\",\"\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"\"\n\n",
 							               ref_title_push_save,
@@ -242,6 +284,8 @@ public class UCS_CSV {
 			e.printStackTrace();
 		}
 		
+		modele.setTotal(String.format("      %02d:%02d", big_total / 60, big_total % 60));
+		XLS_SDRM.export_xls(modele);
 		
 	}
 	
