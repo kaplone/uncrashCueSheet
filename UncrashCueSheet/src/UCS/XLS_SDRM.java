@@ -5,7 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.List;
+
+import javax.sound.midi.Patch;
 
 import org.apache.poi.hssf.usermodel.HSSFPictureData;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -38,35 +41,13 @@ public class XLS_SDRM {
 		  
 		try {
 			
+			File f_test = new File(System.getProperty("user.dir") + "/modele_sdrm_head_foot.xls");
+			fs = new NPOIFSFileSystem(f_test);
 			
-		
-			fs = new NPOIFSFileSystem(new File("sources/modele_sdrm_head_foot.xls"));
+			
 			HSSFWorkbook wb = new HSSFWorkbook(fs.getRoot(), true);
 			Sheet sheet = wb.getSheetAt(0);
-			
-//			//FileInputStream obtains input bytes from the image file
-//		    InputStream inputStream = new FileInputStream("/home/autor/Desktop/EDL/pied.jpg");
-//		    //Get the contents of an InputStream as a byte[].
-//		    byte[] bytes = IOUtils.toByteArray(inputStream);
-//		    //Adds a picture to the workbook
-//		    int pictureIdx = wb.addPicture(bytes, Workbook.PICTURE_TYPE_JPEG);
-//		    //close the input stream
-//		    inputStream.close();
-//		 
-//		    //Returns an object that handles instantiating concrete classes
-//		    CreationHelper helper = wb.getCreationHelper();
-//		 
-//		    //Creates the top-level drawing patriarch.
-//		    Drawing drawing = sheet.createDrawingPatriarch();
-//		 
-//		    //Create an anchor that is attached to the worksheet
-//		    ClientAnchor anchor = helper.createClientAnchor();
-//		    //set top-left corner for the image
-//		    anchor.setAnchorType(3);
-//		    anchor.setDx1(0);
-//		    anchor.setDy1(100);
-//		    
-			
+		
 			Row row = sheet.getRow(7);
 			Cell cell = row.getCell(3);
 		    cell.setCellValue(modele.getName());
@@ -108,6 +89,8 @@ public class XLS_SDRM {
 		  try {
 			fs.close();
 		    fileOut.close();
+		    
+		    System.out.println("\n\n______Terminé______\n\n");
 		} catch (IOException e) {
 			// TODO Bloc catch généré automatiquement
 			e.printStackTrace();
