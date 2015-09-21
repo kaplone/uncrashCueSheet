@@ -86,6 +86,10 @@ public class UCS_CSV {
 	
 	private static int temps_total;
 	private static int big_total;
+	
+	
+	static int num = 1;
+	static boolean premier = true;
 
 	public static void main(String [] args) {
 					
@@ -139,6 +143,8 @@ public class UCS_CSV {
 	    temps_total = 0;
 	    
 	    big_total = 0;
+	    
+	    ref_title_to_compare = null;
 		
 		
 		
@@ -203,7 +209,12 @@ public class UCS_CSV {
 						temps_total += ((Integer.parseInt(temps_diff.split(":")[0]) * 60) + (Integer.parseInt(temps_diff.split(":")[1])));
 						
 						curr_row = new String[] {isrc, ref_title_push_save, prs_.stream().collect(Collectors.joining("\n")) + "\n" + brand, String.format("%02d:%02d", temps_total / 60, temps_total % 60)};
-						modele.getTableau().set(modele.getTableau().size() -1, curr_row);
+						
+						System.out.println(modele);
+						System.out.println(modele.getTableau());
+						System.out.println(modele.getTableau().size()); // vaut 0 ?
+						
+						modele.getTableau().set(modele.getTableau().size() -1, curr_row); // pourquoi -1 ?
 					}
 
 					big_total += ((Integer.parseInt(temps_diff.split(":")[0]) * 60) + (Integer.parseInt(temps_diff.split(":")[1])));
@@ -301,7 +312,7 @@ public class UCS_CSV {
 		link = null;
 		isrc = null;
 		
-		System.out.println(String.format("http://www.audionetwork.com/show-production-results.aspx?stype=4&keywords=%s", ref_base));
+		//System.out.println(String.format("http://www.audionetwork.com/show-production-results.aspx?stype=4&keywords=%s", ref_base));
 		
 		client = HttpClientBuilder.create().build();
 
@@ -315,24 +326,44 @@ public class UCS_CSV {
 			rd = new BufferedReader(
 					new InputStreamReader(response.getEntity().getContent()));
 
-			    String line = "";
-				while ((line = rd.readLine()) != null) {
-					if (! flag_test2 && line.split("play").length > 2 && line.split("play")[2].toLowerCase().contains(ref_ttl.toLowerCase())){
+			    String line = rd.readLine();
+			    
+				while (line != null) {
+					
+					if (line.contains(ref_ttl) && ! premier){
+						
+						link = line.split("\"><")[0].split("<a href=\"")[1];
+						
+						System.out.println(link);
+					}
+					
+                    if (line.contains(ref_ttl)){
+						
+                    	premier = ! premier;
+					}
+					
+					
 
-						//System.out.println("---> " +  line.split("soundPreview")[1].split(",")[1]);
-						
-						id = line.split("soundPreview")[1].split(",")[1];
-						flag_test2 = true;
-					}
-					else if (flag_test2 && line.contains(String.format("%s.aspx", id))){
-						link = line.split("\"")[1];
-						
-						System.out.println("LINK ---> " + link);
-						flag_test2 = false;
-						break;
-						
-					}
+					
+					line = rd.readLine();
 				}
+					
+//					if (! flag_test2 && line.split("play").length > 2 && line.split("play")[2].toLowerCase().contains(ref_ttl.toLowerCase())){
+//
+//						System.out.println("---> " +  line.split("soundPreview")[1].split(",")[1]);
+//						
+//						id = line.split("soundPreview")[1].split(",")[1];
+//						flag_test2 = true;
+//					}
+//					else if (flag_test2 && line.contains(String.format("%s.aspx", id))){
+//						link = line.split("\"")[1];
+//						
+//						System.out.println("LINK ---> " + link);
+//						flag_test2 = false;
+//						break;
+//						
+//					}
+				
 				if (link == null){
 				    surfer_alt();
 				}
@@ -393,7 +424,7 @@ public class UCS_CSV {
 		//ref_alt = ref.split("/")[1].substring(0,1);
 		ref_title_push = Arrays.asList(ref_title_push.split(" ")).subList(0, ref_title_push.split(" ").length -1).stream().collect(Collectors.joining(" "));
 		//surfer(String.format("%s/%s", ref.split("/")[0], ref_alt));
-		//System.out.println("alt : " + ref_title_push);
+		System.out.println("alt : " + ref_title_push);
 		surfer(ref_title_push);
 
 	}
